@@ -1,91 +1,43 @@
-winget upgrade --all
+@echo off
+chcp 65001
+setlocal
 
+rem Check for options
+set RUN_WINGET=false
+set RUN_PIP=false
+set RUN_UWP=false
 
+if "%1"=="" (
+    set RUN_WINGET=true
+    set RUN_PIP=true
+    set RUN_UWP=true
+) else (
+    :parse_options
+    if "%1"=="-w" (
+        set RUN_WINGET=true
+    ) else if "%1"=="-p" (
+        set RUN_PIP=true
+    ) else if "%1"=="-s" (
+        set RUN_UWP=true
+    )
+    shift
+    if not "%1"=="" goto parse_options
+)
 
+rem Execute commands based on options
+if "%RUN_WINGET%"=="true" (
+    echo wingetパッケージをアップデートします。
+    winget upgrade --all
+)
 
+if "%RUN_PIP%"=="true" (
+    echo pipパッケージをアップデートします。
+    pip-review --auto
+)
 
+if "%RUN_UWP%"=="true" (
+    echo MS UWPのパッケージをアップデートします。
+    powershell -Command "[Windows.ApplicationModel.Store.Preview.InstallControl.AppInstallManager,InstallService.dll,ContentType=WindowsRuntime]; (New-Object Windows.ApplicationModel.Store.Preview.InstallControl.AppInstallManager).SearchForAllUpdatesAsync()"
+)
 
-
-
-
-
-
-#!/bin/bash
-
-function usage() {
-  cat <<EOM
-使用方法: $(basename "$0") [OPTION]...
-    -a          APTのみ実行
-    -y		'y'の入力をスキップします
-    -h          ヘルプを表示します
-EOM
-}
-
-while (($#>0)); do
-  case $1 in
-    a|-a|--apt)
-      PACUP_MOD="apt"
-      ;;
-    y|-y|--yes)
-      PACUP_YES=" -y"
-      ;;
-    h|-h|--help)
-      usage
-      exit 0
-      ;;
-    *)
-      usage
-      exit 1
-      ;;
-  esac
-  shift
-done
-
-function PACUP_FPK() {
-  : #FPK
-}
-
-function PACUP_SYS() {
-  : #SYS
-}
-
-function PACUP_APT() {
-  sudo apt update
-  sudo apt$PACUP_YES full-upgrade
-  sudo apt$PACUP_YES autoremove
-}
-
-if [ "$PACUP_MOD" == "apt" ]; then
-   PACUP_APT
-  if [ $? != 0 ]; then
-    echo -e "\nAPTコマンドの実行はRoot(管理者)権限を要求します｡\nもう一度お試しください｡\n"
-    PACUP_APT
-  fi
-  exit 0
-fi
-
-echo -e "Flatpakパッケージをアップデートします"
-PACUP_FPK
-echo -e "Flatpakパッケージをアップデートしました"
-
-echo -e "\nSnapパッケージをアップデートします"
-PACUP_SYS
-if [ $? != 0 ]; then
-  echo -e "\nRoot(管理者)権限を要求しています｡\nもう一度お試しください｡"
-  PACUP_SYS
-  if [ $? != 0 ]; then
-    echo -e "\n権限の昇格に失敗したため､ 実行を終了しました｡"
-    exit 1
-  fi
-   echo -e "\n権限の昇格に失敗したため､ 実行を終了しました｡"
-   exit 1
-fi
-echo -e "Snapパッケージをアップデートしました"
-
-echo -e "\nDebianパッケージをアップデートします"
-PACUP_APT
-echo -e "Debianパッケージをアップデートしました"
-
-sleep 7
-
-exit 0
+endlocal
