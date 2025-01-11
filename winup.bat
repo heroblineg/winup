@@ -1,3 +1,15 @@
+winget upgrade --all
+
+
+
+
+
+
+
+
+
+
+
 #!/bin/bash
 
 function usage() {
